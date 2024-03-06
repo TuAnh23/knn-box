@@ -96,14 +96,14 @@ class Token:
         self.avg_precision = 0#
         self.retrieved_sentences = []#
         self.rec_token_id = []#
-        self.cos_sims = []
+        self.cos_sims = []  # Sentence level similarity. Taking the average as final score
         self.avg_cos_sim = 0
         self.max_prob_token = 0#
         self.rec_token_id = 0#
-        self.distances = []#
+        self.distances = []  # List of knn-distances. Taking the average as final score
         self.annotation = Error.CORRECT
-        self.different_count = 0#
-        self.chosen_token_id = 0
+        self.different_count = 0  # Number of different knn-proposals
+        self.chosen_token_id = 0  # Model prediction equals retrieved knn-tokens. Check if this one in rec_token_id
         self.chosen_token_prob = 0
         self.pos = 0
 
@@ -119,7 +119,7 @@ class SentenceStat:
         self.src_str = ""#
         self.tgt_str = "" 
         self.total_avg_cos_sim = 0
-        self.avg_most_similar_dist = 0#
+        self.avg_most_similar_dist = 0  # Average KNN distance to 1 score
         self.annotation = []
         self.tokens: List[Token] = []#
         self.retriev_eq_most_likely = 0#
