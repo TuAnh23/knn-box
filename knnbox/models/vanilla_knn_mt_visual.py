@@ -109,11 +109,12 @@ class VanillaKNNMTVisualDecoder(TransformerDecoder):
             alignment_layer=alignment_layer,
             alignment_heads=alignment_heads,
         )
-
         if self.args.knn_mode == "build_datastore":
-            keys = select_keys_with_pad_mask(x, self.datastore.get_pad_mask())
+            layer_number = 6
+            layer = extra["inner_states"][layer_number].permute(1,0,2)
+            keys = select_keys_with_pad_mask(layer, self.datastore.get_pad_mask())
             self.datastore["keys"].add(keys.half())
-        
+            
         elif self.args.knn_mode == "inference":
             # use the k from visual web interface
             k = int(kwargs["knn_parameter"]["k"])

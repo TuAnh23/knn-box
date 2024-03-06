@@ -9,7 +9,7 @@ export OMP_WAIT_POLICY=PASSIVE
 PROJECT_PATH=$( cd -- "$( dirname -- "$ BASH_SOURCE[0]}" )" &> /dev/null && pwd )/../..
 BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
 DATA_PATH=$PROJECT_PATH/data-bin/ted_new
-DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/ted_new
+DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/enc_store
 
 export CUDA_VISIBLE_DEVICES=3
 export CUDA_DEVICE_ORDER=PCI_BUS_ID  
