@@ -5,6 +5,8 @@
 !
 # this line will speed up faiss
 export OMP_WAIT_POLICY=PASSIVE
+export CUDA_VISIBLE_DEVICES=4
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 PROJECT_PATH=$( cd -- "$( dirname -- "$ BASH_SOURCE[0]}" )" &> /dev/null && pwd )/../..
 source ${PROJECT_PATH}/knnbox-scripts/retrieval/.env
@@ -17,8 +19,6 @@ elif [[ ${MT_MODEL} == "ted_new"  ]]; then
   DATA_PATH=$PROJECT_PATH/data-bin/ted_new
 fi
 
-export CUDA_VISIBLE_DEVICES=3
-export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 python $PROJECT_PATH/knnbox-scripts/retrieval/retrieve.py $DATA_PATH \
 --task translation \

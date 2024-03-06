@@ -467,8 +467,14 @@ def _upgrade_state_dict(state):
         )
 
     # set any missing default values in the task, model or other registries
-    registry.set_defaults(state["args"], tasks.TASK_REGISTRY[state["args"].task])
-    registry.set_defaults(state["args"], models.ARCH_MODEL_REGISTRY[state["args"].arch])
+    if isinstance(state["args"].task, dict):
+        registry.set_defaults(state["args"], tasks.TASK_REGISTRY[state["args"].task['_name']])
+    else:
+        registry.set_defaults(state["args"], tasks.TASK_REGISTRY[state["args"].task])
+    if hasattr(state["args"], 'arch'):
+        registry.set_defaults(state["args"], models.ARCH_MODEL_REGISTRY[state["args"].arch])
+    else:
+        registry.set_defaults(state["args"], models.ARCH_MODEL_REGISTRY[state["args"].model.arch])
     for registry_name, REGISTRY in registry.REGISTRIES.items():
         choice = getattr(state["args"], registry_name, None)
         if choice is not None:
