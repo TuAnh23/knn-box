@@ -43,7 +43,7 @@ from knnbox.common_utils import global_vars, select_keys_with_pad_mask, archs
 from knnbox.datastore import Datastore
 from knnbox.retriever import Retriever
 
-from token_stat import SentenceStat, Token, Error, need_update, get_data_store, get_knn_layer, WmtError, WmtErrorSeverity, WmtErrorType
+from token_stat import SentenceStat, Token, Error, need_update, get_data_store, get_knn_layer, get_mt_model_name, WmtError, WmtErrorSeverity, WmtErrorType
 
 Batch = namedtuple("Batch", "ids src_tokens src_lengths constraints")
 stats = []
@@ -306,10 +306,11 @@ def _main(args, override_args, output_file):
     test_ds = task.dataset("test")
     k = 8
     # TODO better solution for datastore
-    knn_store_layer = int(os.getenv('LAYER'))
+    knn_store_layer = get_knn_layer()
     datastore = None
     name = get_data_store()
-    datastore = Datastore.load("../../datastore/vanilla-visual/" + name + "_" + str(knn_store_layer), load_list=["keys", "vals", "sentence_ids", "token_positions"])
+    mt_model_name = get_mt_model_name()
+    datastore = Datastore.load(f"../../datastore/vanilla-visual/{mt_model_name}/{name}_{knn_store_layer}", load_list=["keys", "vals", "sentence_ids", "token_positions"])
     datastore.load_faiss_index("keys")
     retriever = Retriever(datastore=datastore, k=k)
 
@@ -327,7 +328,7 @@ def _main(args, override_args, output_file):
         # print("Finished")
     def retrieve_similar(embeddings):
         return retriever.retrieve(embeddings, return_list=["vals", "distances", "sentence_ids", "token_positions"])
-    def get_info(knn_res, i, max_prob_token, chosen_token_prob): 
+    def get_info(knn_res, i, max_prob_token, chosen_token_prob):
         src_sentences = []
         tgt_sentences = []
         src_enc = []
@@ -557,7 +558,7 @@ def _main(args, override_args, output_file):
     nlp = spacy.load("de_core_news_sm")
     nlp = de_core_news_sm.load()
 
-    # For invididual tokens of sentence       
+    # For invididual tokens of sentence
     def token_stat_init(stat: SentenceStat, src, tgt, knn, annotation = None):
         src_length = src.shape[0]
         tgt_length = tgt.shape[0]
@@ -659,7 +660,7 @@ def _main(args, override_args, output_file):
             tgt = res["tgt_enc"]
             knn = res["knn_retrieval"]
             annotation = list(map(lambda x: x.annotation, value.tokens))
-            statistic = SentenceStat()    
+            statistic = SentenceStat()
             token_stat_init(statistic, src_enc, tgt, knn, annotation)
             annotations[src_str] = statistic
             comet_data.append({"src": enc_to_str(src_enc),"mt": enc_to_str(tgt)})
@@ -750,7 +751,7 @@ def _main(args, override_args, output_file):
         total_avg_precision = math.fsum(avg_precisions) / len(avg_precisions)
         breakpoint()
         return None
-    
+
     def save_plot(folder, name):
         file_name = folder + "/" + name + ".pdf"
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
@@ -827,7 +828,7 @@ def _main(args, override_args, output_file):
                     current.sentence_stat_init()
                     sentences.append(current)
                     current = SentenceStat()
-            
+
         if (len(sentences) < 4):
             print("Too few datapoints:", len(sentences))
             return
@@ -921,8 +922,8 @@ def _main(args, override_args, output_file):
             for i in range(1, stat.tgt_count-1):
                 if not filter_token(stat, i, **filter_setting):
                     continue
-                
-   
+
+
     def analyze_with_filter(stats: List[SentenceStat], filter_setting):
         print(filter_setting)
         filter_stats = {}
@@ -1031,7 +1032,7 @@ def _main(args, override_args, output_file):
                 f.write("\tAverage knn distance " + str(stats["avg_distances"]) + "\n")
                 f.write("\tCorrelation between distance and similarity " + str(stats["sim_dist_cor"]) + "\n")
                 f.write("\n")
-    def knn_statistics(use_target = True, comet_use_target = False):   
+    def knn_statistics(use_target = True, comet_use_target = False):
         before = time.perf_counter()
         total = len(test_ds)
         size = 500
@@ -1061,7 +1062,7 @@ def _main(args, override_args, output_file):
                 stats.append(statistic)
                 size_map[src.shape[0]].append((src, tgt))
                 print(str(i) + "/" + str(total) + " " + str(100 * i/total) + "%" , end='\r')
-            model_path = download_model("Unbabel/wmt22-comet-da") if comet_use_target else download_model("Unbabel/wmt20-comet-qe-da") 
+            model_path = download_model("Unbabel/wmt22-comet-da") if comet_use_target else download_model("Unbabel/wmt20-comet-qe-da")
             model = load_from_checkpoint(model_path)
             scores = model.predict(comet_data, batch_size=8, gpus=1)[0]
             for i in range(0, len(scores)):
@@ -1072,7 +1073,7 @@ def _main(args, override_args, output_file):
         dur = time.perf_counter() - before
         print("\n" + str(dur) + " seconds")
         return stats
-    def load_mt_gender():         
+    def load_mt_gender():
         file_name = "data/mt_gender_bin"
         if os.path.exists(file_name):
             print("Found existing file")
@@ -1185,7 +1186,7 @@ def _main(args, override_args, output_file):
             rem_token_length = len(token)
             #print("Next word: |", token, "| len: " , rem_token_length)
             tgt_dict[1]
-            if sentence_id != prev_sentence_id:                    
+            if sentence_id != prev_sentence_id:
                 actual_token_counter = 0
                 if not has_unk:
                     save(sources[prev_sentence_id], translations[prev_sentence_id], labels)
@@ -1227,17 +1228,17 @@ def _main(args, override_args, output_file):
             added += 1
             save(sources[-1], translations[-1], labels)
         print("\Read", added+1, "of", prev_sentence_id, "sentences")
-        
+
         print("Adding score")
         res = model.predict(comet_data, batch_size=8, gpus=1)[0]
         for i in range(0, len(res)):
             data[i].score = res[i]
-            
+
         print("Saving data")
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, "wb") as f:
             pickle.dump(stat_list, f)
-        return stat_list    
+        return stat_list
     def load_wmt_mqm_human_evaluation():
         #judge_name = "rater1"
         judge_name = "rater4"
@@ -1402,7 +1403,7 @@ def _main(args, override_args, output_file):
              'Severity': ["Correct"] * len(measures[0]) + ["Neutral"] * len(measures[1])
                 + ["Minor"] * len(measures[2]) + ["Major"] * len(measures[3])}
         else:
-            d = {'distances': measures[0] + measures[1], 
+            d = {'distances': measures[0] + measures[1],
              'Severity': ["Correct"] * len(measures[0]) + ["Incorrect"] * len(measures[1])}
         frame = pd.DataFrame(data=d)
         data_wide = frame.pivot(columns="Severity", values="distances")
@@ -1586,7 +1587,7 @@ def _main(args, override_args, output_file):
                 prob = list(map(lambda x: x.chosen_token_prob, single.tokens))
                 anno_correct = pearsonr(annotation, corrects)
                 prob_correct = pearsonr(prob, corrects)
-                prob_anno = pearsonr(prob, annotation)  
+                prob_anno = pearsonr(prob, annotation)
                 print("\t\tLooking at average of top", top, "metric:", use)
                 print("\t\tanno-coorect:", anno_correct, "prob-correct:", prob_correct, "prob-anno:", prob_anno)
         print("Finished analysis")
@@ -1617,7 +1618,7 @@ def _main(args, override_args, output_file):
                 else:
                     src_e = test_ds[c * 4]["source"][:-1]
                     tgt_e = test_ds[c * 4]["target"][:-1]
-                    
+
                 src_e = torch.tensor(src_e).cuda().unsqueeze(0)
                 tgt_e = torch.tensor(tgt_e).cuda().unsqueeze(0)
                 knn = whole_sentence_info_from_enc(src_e, tgt_e)
@@ -1700,7 +1701,7 @@ def _main(args, override_args, output_file):
         name = get_data_store() +  "_layer_" + str(knn_store_layer) + "/"
         if mode == 1:
             stats = knn_statistics(use_target=False, comet_use_target=False)
-            folder_name += "full_ted/" + name 
+            folder_name += "full_ted/" + name
         elif mode == 2:
             stats = load_anotation_set()
             #analyze_comet_score(stats)
@@ -1737,7 +1738,7 @@ def _main(args, override_args, output_file):
             custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
             stats = add_annotations(filename="data/custom", src="custom")
             folder_name += "custom/" + custom_file_name + "/layer_" + str(knn_store_layer) + "/"
-            
+
 
         from pathlib import Path
         Path(folder_name).mkdir(parents=True, exist_ok=True)
@@ -1753,7 +1754,7 @@ def _main(args, override_args, output_file):
             if mode == 8:
                 analyze_comet_score(stats)
                 continue
-                
+
             single = collapse(stats, folder_name)
             analyze_comet_score(stats)
             if mode == 1:
@@ -1788,7 +1789,7 @@ def get_knn_generation_parser(interactive=False, default_task="translation"):
     options.add_dataset_args(parser, gen=True)
     options.add_distributed_training_args(parser, default_world_size=1)
     ## knnbox related code >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-    # compared to options.get_generation_parser(..), knnbox only add one line code below 
+    # compared to options.get_generation_parser(..), knnbox only add one line code below
     options.add_model_args(parser)
     ## <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
     options.add_generation_args(parser)

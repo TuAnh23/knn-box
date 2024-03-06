@@ -19,7 +19,7 @@ from torch.serialization import default_restore_location
 
 logger = logging.getLogger(__name__)
 
- 
+
 def save_checkpoint(args, trainer, epoch_itr, val_loss):
     from fairseq import distributed_utils, meters
 
@@ -66,7 +66,7 @@ def save_checkpoint(args, trainer, epoch_itr, val_loss):
         not hasattr(save_checkpoint, "best")
         or is_better(val_loss, save_checkpoint.best)
     )
-    
+
     if val_loss is not None and args.keep_best_checkpoints > 0:
         checkpoint_conds[
             "checkpoint.best_{}_{:.2f}.pt".format(args.best_checkpoint_metric, val_loss)
@@ -237,10 +237,18 @@ def load_checkpoint_to_cpu(path, arg_overrides=None):
             f, map_location=lambda s, l: default_restore_location(s, "cpu")
         )
 
+    if 'deltalm' in path:
+        # DeltaLM is compatible for a higher version of fairseq
+        # Adapt
+        import argparse
+        state["args"] = argparse.Namespace(**state["cfg"])
+
     args = state["args"]
     if arg_overrides is not None:
         for arg_name, arg_val in arg_overrides.items():
             setattr(args, arg_name, arg_val)
+            if hasattr(args, 'model'):
+                setattr(args.model, arg_name, arg_val)
     state = _upgrade_state_dict(state)
     return state
 
@@ -282,7 +290,7 @@ def load_model_ensemble_and_task(
     ), "Cannot load state dict with strict=True and checkpoint shards > 1"
     # add by knn-box, set-strict=False
     strict = False
-    
+
     ensemble = []
     for filename in filenames:
         orig_filename = filename
@@ -300,8 +308,19 @@ def load_model_ensemble_and_task(
                     task = tasks.setup_task(args)
 
                 # build model for ensemble
-                model = task.build_model(args)
-            model.load_state_dict(state["model"], strict=strict, args=args)
+                if hasattr(args, 'model'):
+                    import copy
+                    model_args = copy.deepcopy(args.model)
+                    for key, value in args.__dict__.items():
+                        if not hasattr(model_args, key):
+                            setattr(model_args, key, value)
+                    model = task.build_model(model_args)
+                else:
+                    model = task.build_model(args)
+            if hasattr(args, 'model'):
+                model.load_state_dict(state["model"], strict=strict, args=model_args)
+            else:
+                model.load_state_dict(state["model"], strict=strict, args=args)
         ensemble.append(model)
     return ensemble, args, task
 
@@ -453,7 +472,12 @@ def _upgrade_state_dict(state):
     for registry_name, REGISTRY in registry.REGISTRIES.items():
         choice = getattr(state["args"], registry_name, None)
         if choice is not None:
-            cls = REGISTRY["registry"][choice]
+            if isinstance(choice, dict):
+                if choice['_name'] == 'inverse_sqrt_flex':
+                    continue
+                cls = REGISTRY["registry"][choice['_name']]
+            else:
+                cls = REGISTRY["registry"][choice]
             registry.set_defaults(state["args"], cls)
 
     return state

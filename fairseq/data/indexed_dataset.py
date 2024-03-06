@@ -101,6 +101,7 @@ dtypes = {
     6: float,
     7: np.double,
     8: np.uint16,
+    9: np.uint32,
 }
 
 

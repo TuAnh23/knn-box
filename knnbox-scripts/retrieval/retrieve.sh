@@ -1,4 +1,4 @@
-:<<! 
+:<<!
 [script description]: use vanilla-knn-mt to translate
 [dataset]: multi domain DE-EN dataset
 [base model]: WMT19 DE-EN
@@ -7,12 +7,18 @@
 export OMP_WAIT_POLICY=PASSIVE
 
 PROJECT_PATH=$( cd -- "$( dirname -- "$ BASH_SOURCE[0]}" )" &> /dev/null && pwd )/../..
-BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
-DATA_PATH=$PROJECT_PATH/data-bin/ted_new
-DATASTORE_LOAD_PATH=$PROJECT_PATH/datastore/vanilla-visual/ted_new
+source ${PROJECT_PATH}/knnbox-scripts/retrieval/.env
+
+if [[ ${MT_MODEL} == "deltalm_base_ft_ted"  ]]; then
+  BASE_MODEL=$PROJECT_PATH/models/deltalm_base_ft_ted/checkpoint_best.pt
+  DATA_PATH=$PROJECT_PATH/data-bin/ted_deltalm
+elif [[ ${MT_MODEL} == "ted_new"  ]]; then
+  BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
+  DATA_PATH=$PROJECT_PATH/data-bin/ted_new
+fi
 
 export CUDA_VISIBLE_DEVICES=3
-export CUDA_DEVICE_ORDER=PCI_BUS_ID  
+export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 python $PROJECT_PATH/knnbox-scripts/retrieval/retrieve.py $DATA_PATH \
 --task translation \

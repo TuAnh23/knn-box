@@ -1,4 +1,4 @@
-r""" 
+r"""
 This file is copied from fairseq_cli/validate.py.
 knnbox made 2 major changes:
 
@@ -6,7 +6,7 @@ change 1. We modified the part of parsing args so that is
 can parse the arch specified on the cli instead of directly
 using the arch inside checkpoint.
 
-change 2. we add codes about `saving datastore vals`, `dump datastore`, etc. 
+change 2. we add codes about `saving datastore vals`, `dump datastore`, etc.
 """
 
 import logging
@@ -61,7 +61,7 @@ def main(args, override_args=None):
         suffix=getattr(args, "checkpoint_suffix", ""),
     )
     model = models[0]
-    
+
     # Move models to GPU
     for model in models:
         if use_fp16:
@@ -73,10 +73,13 @@ def main(args, override_args=None):
     logger.info(model_args)
 
     # Build criterion
-    criterion = task.build_criterion(model_args)
+    if hasattr(model_args, 'model'):
+        criterion = task.build_criterion(model_args.model)
+    else:
+        criterion = task.build_criterion(model_args)
     criterion.eval()
 
-    
+
     ## knnbox related code start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     knn_type = args.arch.split("@")[0]
     if "datastore" not in global_vars():
@@ -136,7 +139,7 @@ def main(args, override_args=None):
                 non_pad_tokens, mask = filter_pad_tokens(sample["target"])
                 datastore["vals"].add(non_pad_tokens)
                 datastore.set_pad_mask(mask)
-            
+
             elif knn_type == "pck_knn_mt":
                 non_pad_tokens, mask = filter_pad_tokens(sample["target"])
                 datastore["vals"].add(non_pad_tokens)
@@ -147,7 +150,7 @@ def main(args, override_args=None):
                 non_pad_tokens, mask = filter_pad_tokens(sample["target"])
                 datastore["vals"].add(non_pad_tokens)
                 datastore.set_pad_mask(mask)
-                # get the key-value pair related sentence_ids 
+                # get the key-value pair related sentence_ids
                 target_len = mask.sum(dim=-1)
                 sentence_ids = []
                 for idx, sentence_id in enumerate(sample["id"].cpu().numpy()):
@@ -179,7 +182,7 @@ def main(args, override_args=None):
             log_output = agg.get_smoothed_values()
 
         progress.print(log_output, tag=subset, step=i)
-    
+
 
     ## knnbox related code start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
     # release memory to make sure we have enough gpu memory to build faiss index
@@ -228,7 +231,7 @@ def get_build_datastore_parser(default_task=None):
     from fairseq.dataclass.data_class import CommonEvalParams
     options.gen_parser_from_dataclass(group, CommonEvalParams())
     return parser
-## <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end 
+## <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<< end
 
 def cli_main():
     ## knnbox related code start >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -250,5 +253,5 @@ def cli_main():
 
 if __name__ == "__main__":
     cli_main()
-    
+
 

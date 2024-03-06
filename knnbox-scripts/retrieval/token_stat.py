@@ -14,7 +14,10 @@ def need_update():
     return False
 
 def get_knn_layer():
-    return 6
+    return int(os.getenv('LAYER'))
+
+def get_mt_model_name():
+    return os.getenv('MT_MODEL')
 
 nlp = None
 
@@ -117,7 +120,7 @@ class SentenceStat:
         self.avg_recall = 0#
         self.avg_precision = 0#
         self.src_str = ""#
-        self.tgt_str = "" 
+        self.tgt_str = ""
         self.total_avg_cos_sim = 0
         self.avg_most_similar_dist = 0  # Average KNN distance to 1 score
         self.annotation = []
