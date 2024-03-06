@@ -638,6 +638,9 @@ def _main(args, override_args, output_file):
             return False
         return True # TODO
     def add_annotations(filename="data/standard_annotation", src="ted", overwrite=False):
+        if src == "custom":
+            custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
+            filename += "/" + custom_file_name + ".bin"
         model_path = download_model("Unbabel/wmt20-comet-qe-da")
         model = load_from_checkpoint(model_path)
         comet_data = []
@@ -670,7 +673,9 @@ def _main(args, override_args, output_file):
         last = -1
         if src != "custom":
             last = int(input("Stop after ... sentences"))
-        src_list = None
+        else:
+            src_list = open("files/" + custom_file_name, "r").readlines()
+            last = len(src_list)
         if src == "ted":
             print("Using ted data")
             #src_list = ds
@@ -680,21 +685,13 @@ def _main(args, override_args, output_file):
             print("Using news data")
             src_list = open(src, "r").readlines()
         while True:
+                if len(annotations) == len(src_list):
+                    break
                 if i == last:
                     break
                 print(last - i, "sentences remaining")
                 print("Annotation no. ", len(annotations))
-                src_str = ""
-                if src == "ted":
-                    #src_str = enc_to_str(src_list[i]["source"])
-                    src_str = src_list[i]
-                elif src == "wmt/xinhua.txt":
-                    src_str = src_list[i]
-                elif src == "custom":
-                    src_str = input()
-                else:
-                    print(src, "does not exist as parameter")
-                    exit()
+                src_str = src_list[i]
                 src_str = src_str.replace("\n", "")
                 print(src_str)
                 i += 1
@@ -707,18 +704,22 @@ def _main(args, override_args, output_file):
                 src_enc = res["src_enc"]
                 tgt = res["tgt_enc"]
                 knn = res["knn_retrieval"]
-                annotation = collect_annotation(tgt)
+                if src != "custom":
+                    annotation = collect_annotation(tgt)
+                else:
+                    annotation = [Error.CORRECT] * res.shape[0]
                 statistic = SentenceStat()
                 #breakpoint()
                 token_stat_init(statistic, src_enc, tgt, knn, annotation)
                 annotations[src_str] = statistic
-        delete = ""
-        while last != 0:
-            delete = input("")
-            if delete == "q":
-                break
-            if delete in annotations:
-                del annotations[delete]
+        if src != "custom":
+            delete = ""
+            while last != 0:
+                delete = input("")
+                if delete == "q":
+                    break
+                if delete in annotations:
+                    del annotations[delete]
         if update or last != 0:
             save_anotations(annotations, filename)
             print("Saved annotations")
@@ -1688,6 +1689,8 @@ def _main(args, override_args, output_file):
         mode = 6
     elif mode == "display":
         mode = 7
+    elif mode == "custom":
+        mode = 8
     else:
         print("Error: Non existing mode")
         exit()
@@ -1730,6 +1733,11 @@ def _main(args, override_args, output_file):
         elif mode == 7:
             print("Analysing baseline datasets")
             folder_name += "display/"
+        elif mode == 8:
+            custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
+            stats = add_annotations(filename="data/custom", src="custom")
+            folder_name += "custom/" + custom_file_name + "/layer_" + str(knn_store_layer) + "/"
+            
 
         from pathlib import Path
         Path(folder_name).mkdir(parents=True, exist_ok=True)
@@ -1742,6 +1750,10 @@ def _main(args, override_args, output_file):
                     for m in ["cos", "sin"]:
                         random_baseline(i, m)
                 continue
+            if mode == 8:
+                analyze_comet_score(stats)
+                continue
+                
             single = collapse(stats, folder_name)
             analyze_comet_score(stats)
             if mode == 1:
