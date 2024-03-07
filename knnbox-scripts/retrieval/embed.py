@@ -2,7 +2,7 @@ from sentence_transformers import SentenceTransformer, util
 import os
 import pickle
 import math
-from token_stat import SentenceStat
+from token_stat import SentenceStat, get_mt_model_name
 from typing import List
 from dotenv import load_dotenv
 
@@ -24,6 +24,8 @@ elif mode == "qe":
     mode = 6
 elif mode == "display":
     mode = 7
+elif mode == "custom":
+    mode = 8
 else:
     print("Error: Non existing mode")
     exit()
@@ -50,6 +52,9 @@ elif mode == 7:
     for sub in [0,1,2]:
         mode_name = "random data" if sub == 0 else "training data" if sub == 1 else "non-training data"
         file_name = "data/demonstrate_" + mode_name + ".pyobject"
+elif mode == 8:
+    file_name = f"data/{get_mt_model_name()}/custom/{os.getenv('CUSTOM_FILE_NAME')}.bin"
+
 
 print("Loading file")
 if os.path.exists(file_name):
@@ -68,7 +73,7 @@ total = len(stats)
 # breakpoint()
 # test = model.encode(data)
 # breakpoint()
-if mode == 3 or mode == 4:
+if mode == 3 or mode == 4 or mode == 8:
     i = 0
     for key, stat in stats.items():
         src_str_enc = model.encode(stat.src_str)
