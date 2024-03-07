@@ -694,11 +694,13 @@ def _main(args, override_args, output_file):
                     break
                 if i == last:
                     break
-                print(last - i, "sentences remaining")
-                print("Annotation no. ", len(annotations))
+                if src != "custom":
+                    print(last - i, "sentences remaining")
+                    print("Annotation no. ", len(annotations))
                 src_str = src_list[i]
                 src_str = src_str.replace("\n", "")
-                print(src_str)
+                if src != "custom":
+                    print(src_str)
                 i += 1
                 if src_str in annotations and not overwrite:
                     last += 1

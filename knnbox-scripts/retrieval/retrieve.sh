@@ -5,11 +5,18 @@
 !
 # this line will speed up faiss
 export OMP_WAIT_POLICY=PASSIVE
-export CUDA_VISIBLE_DEVICES=4
-export CUDA_DEVICE_ORDER=PCI_BUS_ID
 
 PROJECT_PATH=$( cd -- "$( dirname -- "$ BASH_SOURCE[0]}" )" &> /dev/null && pwd )/../..
-source ${PROJECT_PATH}/knnbox-scripts/retrieval/.env
+
+# Set environment vars
+ENV_VAR_PATH=$1
+# Check if the file exists
+if [ ! -f "$ENV_VAR_PATH" ]; then
+  ENV_VAR_PATH=${PROJECT_PATH}/knnbox-scripts/retrieval/.env
+  echo "ENV_VAR_PATH not passed in. Set ENV_VAR_PATH=${ENV_VAR_PATH}"
+fi
+
+export $(grep -v '^\s*#' "$ENV_VAR_PATH" | grep -v '^\s*$' | xargs)
 
 if [[ ${MT_MODEL} == "deltalm_base_ft_ted"  ]]; then
   BASE_MODEL=$PROJECT_PATH/models/deltalm_base_ft_ted/checkpoint_best.pt
@@ -18,7 +25,6 @@ elif [[ ${MT_MODEL} == "ted_new"  ]]; then
   BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
   DATA_PATH=$PROJECT_PATH/data-bin/ted_new
 fi
-
 
 python $PROJECT_PATH/knnbox-scripts/retrieval/retrieve.py $DATA_PATH \
 --task translation \
