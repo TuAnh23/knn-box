@@ -18,3 +18,12 @@ bash retrieve.sh ${ENV_VAR_PATH}
 conda activate /home/tpalzer/miniconda3/envs/embed
 which python
 python embed.py
+
+conda activate /home/tpalzer/miniconda3/envs/k
+which python
+python reformat_output.py \
+  --dataset ${CUSTOM_FILE_NAME} \
+  --mt_model ${MT_MODEL} \
+  --emb_layer ${LAYER} \
+  --datastore ${DATASTORE_NAME} \
+  --output_root_dir "/project/OML/tdinh/knn-qe"

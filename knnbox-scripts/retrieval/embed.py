@@ -53,7 +53,7 @@ elif mode == 7:
         mode_name = "random data" if sub == 0 else "training data" if sub == 1 else "non-training data"
         file_name = "data/demonstrate_" + mode_name + ".pyobject"
 elif mode == 8:
-    file_name = f"data/{get_mt_model_name()}/custom/{os.getenv('CUSTOM_FILE_NAME')}.bin"
+    file_name = f"data/{get_mt_model_name()}/custom/{os.getenv('DATASTORE_NAME')}_{os.getenv('LAYER')}/{os.getenv('CUSTOM_FILE_NAME')}.bin"
 
 
 print("Loading file")

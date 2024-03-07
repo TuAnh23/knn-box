@@ -643,6 +643,7 @@ def _main(args, override_args, output_file):
             return False
         return True # TODO
     def add_annotations(filename="data/standard_annotation", src="ted", overwrite=False):
+        os.makedirs(filename, exist_ok=True)
         if src == "custom":
             custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
             filename += "/" + custom_file_name + ".bin"
@@ -1742,7 +1743,7 @@ def _main(args, override_args, output_file):
             folder_name += "display/"
         elif mode == 8:
             custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
-            stats = add_annotations(filename=f"data/{get_mt_model_name()}/custom", src="custom")
+            stats = add_annotations(filename=f"data/{get_mt_model_name()}/custom/{os.getenv('DATASTORE_NAME')}_{os.getenv('LAYER')}", src="custom")
             folder_name += "custom/" + custom_file_name + "/layer_" + str(knn_store_layer) + "/"
 
 
