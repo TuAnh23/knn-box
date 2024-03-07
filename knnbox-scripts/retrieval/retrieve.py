@@ -26,6 +26,7 @@ from scipy.stats import spearmanr
 from scipy.stats.stats import pearsonr
 from sklearn.metrics import matthews_corrcoef
 from getkey import getkey
+from tqdm import tqdm
 import pandas as pd
 import sentencepiece as sp
 import torch
@@ -310,7 +311,9 @@ def _main(args, override_args, output_file):
     datastore = None
     name = get_data_store()
     mt_model_name = get_mt_model_name()
-    datastore = Datastore.load(f"../../datastore/vanilla-visual/{mt_model_name}/{name}_{knn_store_layer}", load_list=["keys", "vals", "sentence_ids", "token_positions"])
+    datastore_path = f"../../datastore/vanilla-visual/{mt_model_name}/{name}_{knn_store_layer}"
+    print(f"Loading datastore from: {datastore_path}")
+    datastore = Datastore.load(datastore_path, load_list=["keys", "vals", "sentence_ids", "token_positions"])
     datastore.load_faiss_index("keys")
     retriever = Retriever(datastore=datastore, k=k)
 
@@ -434,12 +437,13 @@ def _main(args, override_args, output_file):
     def load_anotations(annotations_file_name):
         annotations = {}
         if os.path.exists(annotations_file_name):
-            print("Found existing anotations")
+            print(f"Found existing anotations at {annotations_file_name}")
             with open(annotations_file_name, "rb") as f:
                 annotations = pickle.load(f)
         return annotations
     def save_anotations(annotations, anotations_file_name):
         if annotations != None:
+            print(f"Saving annotation to {anotations_file_name}")
             with open(anotations_file_name, "wb") as f: # "wb" because we want to write in binary mode
                 pickle.dump(annotations, f)
     def collect_annotation(res):
@@ -685,7 +689,7 @@ def _main(args, override_args, output_file):
         elif src == "wmt/xinhua.txt":
             print("Using news data")
             src_list = open(src, "r").readlines()
-        while True:
+        for _ in tqdm(range(len(src_list))):
                 if len(annotations) == len(src_list):
                     break
                 if i == last:
@@ -708,7 +712,7 @@ def _main(args, override_args, output_file):
                 if src != "custom":
                     annotation = collect_annotation(tgt)
                 else:
-                    annotation = [Error.CORRECT] * res.shape[0]
+                    annotation = [Error.CORRECT] * len(res['knn_retrieval'])
                 statistic = SentenceStat()
                 #breakpoint()
                 token_stat_init(statistic, src_enc, tgt, knn, annotation)
@@ -1697,7 +1701,7 @@ def _main(args, override_args, output_file):
         exit()
     for mode in [mode]:
         show = ""
-        folder_name = "plots/"
+        folder_name = f"plots/{get_mt_model_name()}/"
         name = get_data_store() +  "_layer_" + str(knn_store_layer) + "/"
         if mode == 1:
             stats = knn_statistics(use_target=False, comet_use_target=False)
@@ -1736,7 +1740,7 @@ def _main(args, override_args, output_file):
             folder_name += "display/"
         elif mode == 8:
             custom_file_name = os.getenv('CUSTOM_FILE_NAME').lower()
-            stats = add_annotations(filename="data/custom", src="custom")
+            stats = add_annotations(filename=f"data/{get_mt_model_name()}/custom", src="custom")
             folder_name += "custom/" + custom_file_name + "/layer_" + str(knn_store_layer) + "/"
 
 
