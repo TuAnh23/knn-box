@@ -54,7 +54,7 @@ def main():
     }
     for nr_neighbors in [1,2,4,6,8]:
         qe_score_dict[f'knn_distance_inv_k{nr_neighbors}'] = []
-        qe_score_dict[f'sent_similarity_inv_k{nr_neighbors}'] = []
+        qe_score_dict[f'sent_similarity_k{nr_neighbors}'] = []
 
     for src_sent in src_sents:
         bin_out_sent = bin_out[src_sent] if src_sent in bin_out else None
@@ -79,9 +79,8 @@ def main():
                 )
 
                 # Average of tokens' train sentences similarity (also average of average)
-                # Change sign so that the higher score means better quality
-                qe_score_dict[f'sent_similarity_inv_k{nr_neighbors}'].append(
-                    - np.concatenate([
+                qe_score_dict[f'sent_similarity_k{nr_neighbors}'].append(
+                    np.concatenate([
                         k_smallest_vals(x.cos_sims, nr_neighbors) for x in bin_out_sent.tokens
                     ]).mean()
                 )
