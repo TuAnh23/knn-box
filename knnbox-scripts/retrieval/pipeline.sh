@@ -11,6 +11,10 @@ else
     echo "ENV_VAR_PATH not passed in."
 fi
 
+# Clean start
+rm -rf "data/${MT_MODEL}/${DATASET}/${DATASTORE_NAME}_${LAYER}/${CUSTOM_FILE_NAME}.bin"
+rm -rf "/project/OML/tdinh/knn-qe/${MT_MODEL}/${CUSTOM_FILE_NAME}/${DATASTORE_NAME}_${LAYER}"
+
 conda activate /home/tpalzer/miniconda3/envs/k
 which python
 bash retrieve.sh ${ENV_VAR_PATH}

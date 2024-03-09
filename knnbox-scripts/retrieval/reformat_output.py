@@ -42,6 +42,7 @@ def main():
 
     with open(bin_out_path, 'rb') as f:
         bin_out = pickle.load(f)
+    nr_neighbors_max = len(list(bin_out.values())[0].tokens[0].distances)
 
     mt = []
 
@@ -52,7 +53,8 @@ def main():
         'nr_diff_knn_inv': [],
         'nr_out_equal_knn': [],
     }
-    for nr_neighbors in [1,2,4,6,8]:
+    nr_neighbors_list = [1] + list(range(2, nr_neighbors_max + 1, 2))
+    for nr_neighbors in nr_neighbors_list:
         qe_score_dict[f'knn_distance_inv_k{nr_neighbors}'] = []
         qe_score_dict[f'sent_similarity_k{nr_neighbors}'] = []
 
@@ -69,7 +71,7 @@ def main():
                 np.array([x.chosen_token_prob for x in bin_out_sent.tokens]).mean()
             )
 
-            for nr_neighbors in [1,2,4,6,8]:
+            for nr_neighbors in nr_neighbors_list:
                 # Average of tokens' KNN distance (average of average)
                 # Change sign so that the higher score means better quality
                 qe_score_dict[f'knn_distance_inv_k{nr_neighbors}'].append(

@@ -305,7 +305,7 @@ def _main(args, override_args, output_file):
     model = models[0]
     ds = task.dataset(args.gen_subset)
     test_ds = task.dataset("test")
-    k = 8
+    k = 100
     # TODO better solution for datastore
     knn_store_layer = get_knn_layer()
     datastore = None
