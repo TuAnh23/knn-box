@@ -76,14 +76,14 @@ def main():
                 # Change sign so that the higher score means better quality
                 qe_score_dict[f'knn_distance_inv_k{nr_neighbors}'].append(
                     - np.concatenate([
-                        k_smallest_vals(x.distances, nr_neighbors) for x in bin_out_sent.tokens
+                        k_neareast_filter(x.distances, nr_neighbors, x.distances) for x in bin_out_sent.tokens
                     ]).mean()
                 )
 
                 # Average of tokens' train sentences similarity (also average of average)
                 qe_score_dict[f'sent_similarity_k{nr_neighbors}'].append(
                     np.concatenate([
-                        k_smallest_vals(x.cos_sims, nr_neighbors) for x in bin_out_sent.tokens
+                        k_neareast_filter(x.cos_sims, nr_neighbors, x.distances) for x in bin_out_sent.tokens
                     ]).mean()
                 )
 
@@ -113,12 +113,29 @@ def main():
         write_text_file(v, f"{output_dir}/qeScore_{k}.txt")
 
 
-def k_smallest_vals(l, k):
+def k_neareast_filter(l, k_small, distances):
     """
-    Return k smallest values in the list l
+    :param: l: a list of values corresponding to neighbors in the `distances` list
+    :param: k_small: number of neareast neighbors to filter
+    :param: distances: distance of the k neighbors
     """
-    # Find the indices of the top k smallest values
-    return np.sort(l)[:k]
+    l = np.array(l)
+    distances = np.array(distances)
+    filtered_indices = top_k_smallest_indices(distances, k_small)
+    return l[filtered_indices]
+
+
+def top_k_smallest_indices(arr, k):
+    if k == len(arr):
+        return np.argsort(arr)
+    elif k < len(arr):
+        # Use argpartition to get indices of top k smallest values
+        indices = np.argpartition(arr, k)[:k]
+        # Sort the indices based on the corresponding values
+        sorted_indices = indices[np.argsort(arr[indices])]
+        return sorted_indices
+    else:
+        raise RuntimeError(f"k={k} > len(arr)={len(arr)}")
 
 
 def write_text_file(lines, file_path):
