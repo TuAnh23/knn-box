@@ -49,14 +49,14 @@ def main():
     # All scores are modified so that the higher the score, the better the MT quality
     # Sentence-level score is the average of the token-level score
     qe_score_dict = {
-        'prob': [],
-        'nr_diff_knn_inv': [],
-        'nr_out_equal_knn': [],
+        'prob': []
     }
     nr_neighbors_list = [1] + list(range(2, nr_neighbors_max + 1, 2))
     for nr_neighbors in nr_neighbors_list:
         qe_score_dict[f'knn_distance_inv_k{nr_neighbors}'] = []
         qe_score_dict[f'sent_similarity_k{nr_neighbors}'] = []
+        qe_score_dict[f'nr_diff_knn_inv_k{nr_neighbors}'] = []
+        qe_score_dict[f'nr_out_equal_knn_k{nr_neighbors}'] = []
 
     for src_sent in src_sents:
         bin_out_sent = bin_out[src_sent] if src_sent in bin_out else None
@@ -87,18 +87,22 @@ def main():
                     ]).mean()
                 )
 
-            # Average of tokens' count different retrieved KNN
-            # Change sign so that the higher score means better quality
-            qe_score_dict['nr_diff_knn_inv'].append(
-                - np.array([x.different_count for x in bin_out_sent.tokens]).mean()
-            )
+                # Average of tokens' count different retrieved KNN
+                # Change sign so that the higher score means better quality
+                qe_score_dict[f'nr_diff_knn_inv_k{nr_neighbors}'].append(
+                    - np.array([
+                        len(set(k_neareast_filter(x.rec_token_id.cpu(), nr_neighbors, x.distances).tolist()))
+                        for x in bin_out_sent.tokens
+                    ]).mean()
+                )
 
-            # Average of count KNN tokens equal out tokens
-            qe_score_dict['nr_out_equal_knn'].append(
-                np.array([
-                    np.equal(x.rec_token_id.cpu(), x.chosen_token_id.cpu()).sum() for x in bin_out_sent.tokens
-                ]).mean()
-            )
+                # Average of count KNN tokens equal out tokens
+                qe_score_dict[f'nr_out_equal_knn_k{nr_neighbors}'].append(
+                    np.array([
+                        np.equal(k_neareast_filter(x.rec_token_id.cpu(), nr_neighbors, x.distances), x.chosen_token_id.cpu()).sum()
+                        for x in bin_out_sent.tokens
+                    ]).mean()
+                )
 
     # Replace the NaN values with the lowest score
     for k, v in qe_score_dict.items():
