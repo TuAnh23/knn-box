@@ -78,6 +78,8 @@ if mode == 3 or mode == 4 or mode == 8:
     for key, stat in stats.items():
         src_str_enc = model.encode(stat.src_str)
         for j in range(len(stat.tokens)):
+            if len(stat.tokens[j].cos_sims) > 0 and stat.tokens[j].avg_cos_sim != 0:
+                continue
             retrieved_enc = model.encode(stat.tokens[j].retrieved_sentences)
             score = util.cos_sim(src_str_enc, retrieved_enc)
             average_sim = math.fsum(score[0]) / len(score[0])
@@ -92,6 +94,8 @@ else:
     for i, stat in enumerate(stats):
         src_str_enc = model.encode(stat.src_str)
         for j in range(len(stat.tokens)):
+            if len(stat.tokens[j].cos_sims) > 0 and stat.tokens[j].avg_cos_sim != 0:
+                continue
             retrieved_enc = model.encode(stat.tokens[j].retrieved_sentences)
             score = util.cos_sim(src_str_enc, retrieved_enc)
             average_sim = math.fsum(score[0]) / len(score[0])

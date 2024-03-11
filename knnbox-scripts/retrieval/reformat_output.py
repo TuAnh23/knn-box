@@ -27,7 +27,7 @@ def main():
     parser.add_argument('--dataset', type=str, choices=['dummy.en', 'wmt22general.en', 'ted_tst14.en'])
     parser.add_argument('--mt_model', type=str, choices=['deltalm_base_ft_ted', 'ted_new'])
     parser.add_argument('--emb_layer', type=int, choices=[0, 1, 2, 3, 4, 5, 6], default=6)
-    parser.add_argument('--datastore', type=str, choices=['ted_new'])
+    parser.add_argument('--datastore', type=str, help="Choose among ted_new, reduced_ted_*")
     parser.add_argument('--output_root_dir', type=str)
 
     args = parser.parse_args()
