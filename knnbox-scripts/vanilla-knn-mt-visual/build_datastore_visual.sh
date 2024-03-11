@@ -13,14 +13,32 @@ source ${PROJECT_PATH}/knnbox-scripts/retrieval/.env
 
 if [[ ${MT_MODEL} == "deltalm_base_ft_ted"  ]]; then
   BASE_MODEL=$PROJECT_PATH/models/deltalm_base_ft_ted/checkpoint_best.pt
-  DATA_PATH=$PROJECT_PATH/data-bin/ted_deltalm
-  DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
+  if [[ ${DATASTORE_NAME} == "reduced_ted"* ]]; then
+    PORTION="${DATASTORE_NAME#reduced_ted_}"
+    DATA_PATH=$PROJECT_PATH/data-bin/reduced_ted_deltalm/${PORTION}
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/reduced_ted/${PORTION}_${LAYER}
+  elif [[ ${DATASTORE_NAME} == "ted_new" ]]; then
+    DATA_PATH=$PROJECT_PATH/data-bin/ted_deltalm
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
+  else
+    echo "Unknown datastore ${DATASTORE_NAME}. Exit"
+    exit
+  fi
   ARCH=vanilla_knn_mt_visual@deltalm_base
   MAX_TOKENS=2048
 elif [[ ${MT_MODEL} == "ted_new"  ]]; then
   BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
-  DATA_PATH=$PROJECT_PATH/data-bin/ted_new
-  DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
+  if [[ ${DATASTORE_NAME} == "reduced_ted"* ]]; then
+    PORTION="${DATASTORE_NAME#reduced_ted_}"
+    DATA_PATH=$PROJECT_PATH/data-bin/reduced_ted/${PORTION}
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/reduced_ted/${PORTION}_${LAYER}
+  elif [[ ${DATASTORE_NAME} == "ted_new" ]]; then
+    DATA_PATH=$PROJECT_PATH/data-bin/ted_new
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
+  else
+    echo "Unknown datastore ${DATASTORE_NAME}. Exit"
+    exit
+  fi
   ARCH=vanilla_knn_mt_visual@transformer
   MAX_TOKENS=4096
 fi

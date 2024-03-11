@@ -305,13 +305,17 @@ def _main(args, override_args, output_file):
     model = models[0]
     ds = task.dataset(args.gen_subset)
     test_ds = task.dataset("test")
-    k = 100
+    k = 15
     # TODO better solution for datastore
     knn_store_layer = get_knn_layer()
     datastore = None
     name = get_data_store()
     mt_model_name = get_mt_model_name()
-    datastore_path = f"../../datastore/vanilla-visual/{mt_model_name}/{name}_{knn_store_layer}"
+    if name.startswith("reduced_ted"):
+        portion = name.split('_')[-1]
+        datastore_path = f"../../datastore/vanilla-visual/{mt_model_name}/reduced_ted/{portion}_{knn_store_layer}"
+    else:
+        datastore_path = f"../../datastore/vanilla-visual/{mt_model_name}/{name}_{knn_store_layer}"
     print(f"Loading datastore from: {datastore_path}")
     datastore = Datastore.load(datastore_path, load_list=["keys", "vals", "sentence_ids", "token_positions"])
     datastore.load_faiss_index("keys")
