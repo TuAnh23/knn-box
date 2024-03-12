@@ -17,12 +17,9 @@ if [[ ${MT_MODEL} == "deltalm_base_ft_ted"  ]]; then
     PORTION="${DATASTORE_NAME#reduced_ted_}"
     DATA_PATH=$PROJECT_PATH/data-bin/reduced_ted_deltalm/${PORTION}
     DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/reduced_ted/${PORTION}_${LAYER}
-  elif [[ ${DATASTORE_NAME} == "ted_new" ]]; then
-    DATA_PATH=$PROJECT_PATH/data-bin/ted_deltalm
-    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
   else
-    echo "Unknown datastore ${DATASTORE_NAME}. Exit"
-    exit
+    DATA_PATH=$PROJECT_PATH/data-bin/${DATASTORE_NAME}_deltalm
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/${DATASTORE_NAME}_${LAYER}
   fi
   ARCH=vanilla_knn_mt_visual@deltalm_base
   MAX_TOKENS=2048
@@ -32,12 +29,9 @@ elif [[ ${MT_MODEL} == "ted_new"  ]]; then
     PORTION="${DATASTORE_NAME#reduced_ted_}"
     DATA_PATH=$PROJECT_PATH/data-bin/reduced_ted/${PORTION}
     DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/reduced_ted/${PORTION}_${LAYER}
-  elif [[ ${DATASTORE_NAME} == "ted_new" ]]; then
-    DATA_PATH=$PROJECT_PATH/data-bin/ted_new
-    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/ted_new_${LAYER}
   else
-    echo "Unknown datastore ${DATASTORE_NAME}. Exit"
-    exit
+    DATA_PATH=$PROJECT_PATH/data-bin/${DATASTORE_NAME}
+    DATASTORE_SAVE_PATH=$PROJECT_PATH/datastore/vanilla-visual/$MT_MODEL/${DATASTORE_NAME}_${LAYER}
   fi
   ARCH=vanilla_knn_mt_visual@transformer
   MAX_TOKENS=4096
