@@ -19,10 +19,10 @@ fi
 export $(grep -v '^\s*#' "$ENV_VAR_PATH" | grep -v '^\s*$' | xargs)
 
 if [[ ${MT_MODEL} == "deltalm_base_ft_ted"  ]]; then
-  BASE_MODEL=$PROJECT_PATH/models/deltalm_base_ft_ted/checkpoint_best.pt
-  DATA_PATH=$PROJECT_PATH/data-bin/ted_deltalm
+  BASE_MODEL=$PROJECT_PATH/models/${MT_MODEL}/checkpoint_best.pt
+  DATA_PATH=$PROJECT_PATH/data-bin/ted_new_deltalm
 elif [[ ${MT_MODEL} == "ted_new"  ]]; then
-  BASE_MODEL=$PROJECT_PATH/models/ted_new/checkpoint_best.pt
+  BASE_MODEL=$PROJECT_PATH/models/${MT_MODEL}/checkpoint_best.pt
   DATA_PATH=$PROJECT_PATH/data-bin/ted_new
 fi
 
